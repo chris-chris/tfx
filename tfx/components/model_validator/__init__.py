@@ -12,3 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""Import some constants."""
+from tfx.components.model_validator.executor import ARTIFACT_PROPERTY_BLESSED_KEY
+from tfx.components.model_validator.executor import ARTIFACT_PROPERTY_BLESSED_MODEL_ID_KEY
+from tfx.components.model_validator.executor import ARTIFACT_PROPERTY_BLESSED_MODEL_URI_KEY
+from tfx.components.model_validator.executor import ARTIFACT_PROPERTY_CURRENT_MODEL_ID_KEY
+from tfx.components.model_validator.executor import ARTIFACT_PROPERTY_CURRENT_MODEL_URI_KEY

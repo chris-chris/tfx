@@ -232,6 +232,34 @@ class Metadata(object):
     """Fetches artifacts given artifact type name."""
     return self.store.get_artifacts_by_type(type_name)
 
+  def _get_artifact_state(
+      self, artifact: metadata_store_pb2.Artifact) -> Optional[Text]:
+    """Gets artifact state string if available."""
+    if 'state' in artifact.properties:
+      return artifact.properties['state'].string_value
+    elif 'state' in artifact.custom_properties:
+      return artifact.custom_properties['state'].string_value
+    else:
+      return None
+
+  def get_published_artifacts_by_type_within_context(
+      self, type_name: Text,
+      context_id: int) -> List[metadata_store_pb2.Artifact]:
+    """Fetches artifacts given artifact type name and context id."""
+    try:
+      artifact_type = self.store.get_artifact_type(type_name)
+      if artifact_type is None:
+        raise tf.errors.NotFoundError(None, None, 'No type found.')
+    except tf.errors.NotFoundError:
+      absl.logging.warning('Artifact type %s not registered' % type_name)
+      return []
+
+    all_artifacts_in_context = self.store.get_artifacts_by_context(context_id)
+    return [
+        a for a in all_artifacts_in_context if a.type_id == artifact_type.id and
+        self._get_artifact_state(a) == ArtifactState.PUBLISHED
+    ]
+
   def _prepare_event(self,
                      event_type: metadata_store_pb2.Event.Type,
                      execution_id: Optional[int] = None,

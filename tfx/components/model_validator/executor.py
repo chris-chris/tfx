@@ -40,6 +40,13 @@ MODEL_KEY = 'model'
 # Key for model blessing in executor output_dict.
 BLESSING_KEY = 'blessing'
 
+# Keys for artifact (custom) properties.
+ARTIFACT_PROPERTY_BLESSED_KEY = 'blessed'
+ARTIFACT_PROPERTY_CURRENT_MODEL_URI_KEY = 'current_model'
+ARTIFACT_PROPERTY_CURRENT_MODEL_ID_KEY = 'current_model_id'
+ARTIFACT_PROPERTY_BLESSED_MODEL_URI_KEY = 'blessed_model'
+ARTIFACT_PROPERTY_BLESSED_MODEL_ID_KEY = 'blessed_model_id'
+
 # Path to store model eval results for validation.
 CURRENT_MODEL_EVAL_RESULT_PATH = 'eval_results/current_model'
 BLESSED_MODEL_EVAL_RESULT_PATH = 'eval_results/blessed_model'
@@ -181,23 +188,27 @@ class Executor(base_executor.BaseExecutor):
                                                      'eval')
     blessing = artifact_utils.get_single_instance(output_dict[BLESSING_KEY])
 
-    # Current model.
+    # Current model to be validated.
     current_model = artifact_utils.get_single_instance(input_dict[MODEL_KEY])
     absl.logging.info('Using {} as current model.'.format(current_model.uri))
-    blessing.set_string_custom_property('current_model', current_model.uri)
-    blessing.set_int_custom_property('current_model_id', current_model.id)
+    blessing.set_string_custom_property(ARTIFACT_PROPERTY_CURRENT_MODEL_URI_KEY,
+                                        current_model.uri)
+    blessing.set_int_custom_property(ARTIFACT_PROPERTY_CURRENT_MODEL_ID_KEY,
+                                     current_model.id)
 
     # Denote model component_name.
     component_id = exec_properties['current_component_id']
     blessing.set_string_custom_property('component_id', component_id)
 
-    # Blessed model.
+    # Previous blessed model to be validated against.
     blessed_model_dir = exec_properties['blessed_model']
     blessed_model_id = exec_properties['blessed_model_id']
     absl.logging.info('Using {} as blessed model.'.format(blessed_model_dir))
     if blessed_model_dir:
-      blessing.set_string_custom_property('blessed_model', blessed_model_dir)
-      blessing.set_int_custom_property('blessed_model_id', blessed_model_id)
+      blessing.set_string_custom_property(
+          ARTIFACT_PROPERTY_BLESSED_MODEL_URI_KEY, blessed_model_dir)
+      blessing.set_int_custom_property(ARTIFACT_PROPERTY_BLESSED_MODEL_ID_KEY,
+                                       blessed_model_id)
 
     absl.logging.info('Validating model.')
     # TODO(b/125853306): support customized slice spec.
@@ -209,10 +220,10 @@ class Executor(base_executor.BaseExecutor):
 
     if blessed:
       io_utils.write_string_file(os.path.join(blessing.uri, 'BLESSED'), '')
-      blessing.set_int_custom_property('blessed', 1)
+      blessing.set_int_custom_property(ARTIFACT_PROPERTY_BLESSED_KEY, 1)
     else:
       io_utils.write_string_file(os.path.join(blessing.uri, 'NOT_BLESSED'), '')
-      blessing.set_int_custom_property('blessed', 0)
+      blessing.set_int_custom_property(ARTIFACT_PROPERTY_BLESSED_KEY, 0)
     absl.logging.info('Blessing result {} written to {}.'.format(
         blessed, blessing.uri))
 
